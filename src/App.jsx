@@ -32,6 +32,7 @@ function App() {
 
   const handleStartSession = () => {
     setStep("taskInput")
+    localStorage.setItem('popupState', "taskInput");
   }
 
   const handleSubmitTask = () => {
@@ -39,7 +40,8 @@ function App() {
     const timestamp = new Date().toISOString();
     setStartTime(timestamp);
     setStep("sessionActive");
-  
+    localStorage.setItem('popupState', "sessionActive");
+
     console.log("Session started at:", timestamp);
   
     // Send message to service worker
@@ -53,7 +55,9 @@ function App() {
     setEndTime(timestamp);
     setStep("start");
     setTask("");
-  
+    localStorage.setItem('popupState', "start");
+    localStorage.setItem('task', "");
+
     console.log("Session ended at:", timestamp);
   
     // Send message to service worker
@@ -82,7 +86,7 @@ function App() {
             <input
               type="text"
               value={task}
-              onChange={(e) => setTask(e.target.value)}
+              onChange={(e) => {setTask(e.target.value); localStorage.setItem('task', e.target.value);}}
               className="task-input"
               placeholder="Enter your task..."
             />

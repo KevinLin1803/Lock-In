@@ -33,29 +33,31 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
 
 // Function to send data to the backend
 function sendTabData(tab, eventType) {
-    if (!tab || !tab.id || !tab.url) return; // Ignore invalid tabs
+    // if (!tab || !tab.id || !tab.url) 
+    //     return;
+     // Ignore invalid tabs
 
     const tabData = {
-        id: tab.id,
+        // id: tab.id,
         url: tab.url,
-        title: tab.title || "Unknown",
-        timeStamp: new Date().toISOString(),
-        eventType: eventType,
+        // title: tab.title || "Unknown",
+        // timeStamp: new Date().toISOString(),
+        // eventType: eventType,
         email: userEmail,
-        focusTask: currentTask, // Attach current focus task
+        // focusTask: currentTask, // Attach current focus task
     };
 
     console.log(eventType, tabData);
 
-    // Uncomment to send data to backend
-    // fetch("https://your-backend.com/api/tabs", {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify(tabData)
-    // })
-    // .then((response) => response.json())
-    // .then((data) => console.log("Tab event sent successfully:", data))
-    // .catch((error) => console.error("Error sending tab data:", error));
+    // Gets the data from here and if it works we happy
+    fetch("https://jth0cy1p67.execute-api.ap-southeast-2.amazonaws.com/checkUrl", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(tabData)
+    })
+    .then((response) => response.json())
+    .then((data) => console.log("Tab event sent successfully:", data))
+    .catch((error) => console.error("Error sending tab data:", error));
 }
 
 // Get all open tabs at startup
@@ -69,6 +71,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         isFocusModeOn = true;
         currentTask = request.task; // Store the task
         sendFocusSessionData(currentTask);
+        sendTabData(tab, "Tab Created")
     } else if (request.type === "END_SESSION") {
         isFocusModeOn = false;
         currentTask = null; // Reset task
@@ -81,39 +84,39 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 function sendFocusSessionData(task) {
     const focusData = {
         email: userEmail,
-        task: task,
-        startTime: new Date().toISOString()
+        prompt: task,
+        // startTime: new Date().toISOString()
     };
 
     console.log("Focus session started:", focusData);
-
-    // Uncomment to send data to backend
-    // fetch("https://your-backend.com/api/session/start", {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify(focusData)
-    // })
-    // .then((response) => response.json())
-    // .then((data) => console.log("Focus session sent successfully:", data))
-    // .catch((error) => console.error("Error sending focus session:", error));
+    
+    // Sending data to backend for session start
+    fetch("https://jth0cy1p67.execute-api.ap-southeast-2.amazonaws.com/startSession", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(focusData)
+    })
+    .then((response) => response.json())
+    .then((data) => console.log("Focus session sent successfully:", data))
+    .catch((error) => console.error("Error sending focus session:", error));
 }
 
 // Function to send end session data
 function sendEndSessionData() {
     const endSessionData = {
         email: userEmail,
-        endTime: new Date().toISOString()
+        // endTime: new Date().toISOString()
     };
 
     console.log("Focus session ended:", endSessionData);
 
-    // Uncomment to send data to backend
-    // fetch("https://your-backend.com/api/session/end", {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify(endSessionData)
-    // })
-    // .then((response) => response.json())
-    // .then((data) => console.log("End session sent successfully:", data))
-    // .catch((error) => console.error("Error sending end session:", error));
+    // Sending data to backend for session end
+    fetch("https://jth0cy1p67.execute-api.ap-southeast-2.amazonaws.com/endSession", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(endSessionData)
+    })
+    .then((response) => response.json())
+    .then((data) => console.log("End session sent successfully:", data))
+    .catch((error) => console.error("Error sending end session:", error));
 }
