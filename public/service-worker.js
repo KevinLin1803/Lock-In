@@ -33,30 +33,30 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
 
 // Function to send data to the backend
 function sendTabData(tab, eventType) {
-    // if (!tab || !tab.id || !tab.url) 
-    //     return;
+    if (!tab || !tab.id || !tab.url) return;
      // Ignore invalid tabs
 
     const tabData = {
-        // id: tab.id,
         url: tab.url,
-        // title: tab.title || "Unknown",
-        // timeStamp: new Date().toISOString(),
-        // eventType: eventType,
         email: userEmail,
-        // focusTask: currentTask, // Attach current focus task
     };
 
-    console.log(eventType, tabData);
-
-    // Gets the data from here and if it works we happy
+    // console.log(eventType, tabData);
     fetch("https://jth0cy1p67.execute-api.ap-southeast-2.amazonaws.com/checkUrl", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(tabData)
     })
     .then((response) => response.json())
-    .then((data) => console.log("Tab event sent successfully:", data))
+    .then((data) => {
+        if (data.isRelated == false) {
+            self.registration.showNotification("Lock-In Check", {
+                body: "Are you actually locked in bro?",
+                icon: "experiment (1).jpeg"
+            })
+        }
+        console.log("tab sent succesfully", data);
+    })
     .catch((error) => console.error("Error sending tab data:", error));
 }
 
@@ -70,8 +70,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type === "START_FOCUS") {
         isFocusModeOn = true;
         currentTask = request.task; // Store the task
+        getActiveTab((tab) => {
+            sendFocusSessionData(currentTask);  // Assuming this is defined elsewhere
+            sendTabData(tab, "Tab Created");
+        });
         sendFocusSessionData(currentTask);
-        sendTabData(tab, "Tab Created")
     } else if (request.type === "END_SESSION") {
         isFocusModeOn = false;
         currentTask = null; // Reset task
@@ -79,6 +82,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
     sendResponse({ status: "Received" });
 });
+
+function getActiveTab(callback) {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const tab = tabs[0];  // Assuming you're working with the active tab
+        callback(tab);
+    });
+}
 
 // Function to send focus session data
 function sendFocusSessionData(task) {
@@ -88,7 +98,7 @@ function sendFocusSessionData(task) {
         // startTime: new Date().toISOString()
     };
 
-    console.log("Focus session started:", focusData);
+    console.log("Focus session started:", focusData);    
     
     // Sending data to backend for session start
     fetch("https://jth0cy1p67.execute-api.ap-southeast-2.amazonaws.com/startSession", {

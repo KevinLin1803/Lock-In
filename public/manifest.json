@@ -9,7 +9,9 @@
     "permissions": [
         "tabs",
         "scripting",
-        "activeTab"
+        "activeTab",
+        "storage",
+        "notifications"
     ],
     "background": {
         "service_worker": "service-worker.js",
@@ -18,5 +20,11 @@
     "host_permissions": [
         "http://*/*",
         "https://*/*"
+    ],
+    "content_scripts": [
+        {
+        "matches": ["<all_urls>"],
+        "js": ["content.js"]
+        }
     ]
 }
