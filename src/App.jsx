@@ -1,36 +1,87 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+"use client"
+
+import { useState, useEffect } from "react"
+import "./App.css"
 
 function App() {
-  // const [count, setCount] = useState(0)
+  const [step, setStep] = useState("start") // "start", "taskInput", "sessionActive"
+  const [task, setTask] = useState("")
+  const [startTime, setStartTime] = useState(null)
+  const [endTime, setEndTime] = useState(null)
+  const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight })
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowSize({ width: window.innerWidth, height: window.innerHeight })
+    }
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
+
+  const handleStartSession = () => {
+    setStep("taskInput")
+  }
+
+  const handleSubmitTask = () => {
+    if (task.trim() === "") return
+    const timestamp = new Date().toISOString()
+    setStartTime(timestamp)
+    setStep("sessionActive")
+    console.log("Session started at:", timestamp)
+  }
+
+  const handleEndSession = () => {
+    const timestamp = new Date().toISOString()
+    setEndTime(timestamp)
+    setStep("start")
+    setTask("")
+    console.log("Session ended at:", timestamp)
+  }
 
   return (
-    <>
-      {/* <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div> */}
-      <h1>Welcome to LLM lord's W Extension</h1>
+    <div className="app-container">
+      <div className="timer-card">
+        <h1 className="app-title">Study Timer</h1>
 
-      <input placeholder="Enter your task" className="styled-input"></input>
-      {/* <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
+        {step === "start" && (
+          <div className="step-container start-step">
+            <p>Ready to focus on your studies?</p>
+            <button onClick={handleStartSession} className="btn btn-primary">
+              Start Study Session
+            </button>
+          </div>
+        )}
+
+        {step === "taskInput" && (
+          <div className="step-container task-step">
+            <p>What will you be working on?</p>
+            <input
+              type="text"
+              value={task}
+              onChange={(e) => setTask(e.target.value)}
+              className="task-input"
+              placeholder="Enter your task..."
+            />
+            <button onClick={handleSubmitTask} className="btn btn-success">
+              Begin Focus
+            </button>
+          </div>
+        )}
+
+        {step === "sessionActive" && (
+          <div className="step-container active-step">
+            <div className="task-display">
+              <h2>Currently Focusing On:</h2>
+              <p className="task-text">{task}</p>
+            </div>
+            <button onClick={handleEndSession} className="btn btn-danger">
+              End Session
+            </button>
+          </div>
+        )}
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p> */}
-    </>
+      
+    </div>
   )
 }
 
