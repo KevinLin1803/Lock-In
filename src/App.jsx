@@ -11,6 +11,18 @@ function App() {
   const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight })
 
   useEffect(() => {
+    const savedState = localStorage.getItem('popupState');
+    if (savedState) {
+        setStep(savedState);
+    }
+
+    const savedTask = localStorage.getItem('task');
+    if (savedTask) {
+      setTask(savedTask);
+    }
+  }, []);
+
+  useEffect(() => {
     const handleResize = () => {
       setWindowSize({ width: window.innerWidth, height: window.innerHeight })
     }
