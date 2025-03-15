@@ -23,20 +23,32 @@ function App() {
   }
 
   const handleSubmitTask = () => {
-    if (task.trim() === "") return
-    const timestamp = new Date().toISOString()
-    setStartTime(timestamp)
-    setStep("sessionActive")
-    console.log("Session started at:", timestamp)
-  }
-
+    if (task.trim() === "") return;
+    const timestamp = new Date().toISOString();
+    setStartTime(timestamp);
+    setStep("sessionActive");
+  
+    console.log("Session started at:", timestamp);
+  
+    // Send message to service worker
+    chrome.runtime.sendMessage({ type: "START_FOCUS", task }, (response) => {
+      console.log("Service worker response:", response);
+    });
+  };
+  
   const handleEndSession = () => {
-    const timestamp = new Date().toISOString()
-    setEndTime(timestamp)
-    setStep("start")
-    setTask("")
-    console.log("Session ended at:", timestamp)
-  }
+    const timestamp = new Date().toISOString();
+    setEndTime(timestamp);
+    setStep("start");
+    setTask("");
+  
+    console.log("Session ended at:", timestamp);
+  
+    // Send message to service worker
+    chrome.runtime.sendMessage({ type: "END_SESSION" }, (response) => {
+      console.log("Service worker response:", response);
+    });
+  };
 
   return (
     <div className="app-container">
@@ -81,6 +93,8 @@ function App() {
         )}
       </div>
       
+      {/* Cat SVG */}
+      <img src="/cat.svg" alt="Cat" className="cat-image" />
     </div>
   )
 }
