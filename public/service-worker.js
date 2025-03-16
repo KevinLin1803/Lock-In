@@ -327,19 +327,4 @@ function sendEndSessionData() {
 //     }
 // }
 
-async function query(data) {
-	const response = await fetch(
-		"https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2",
-		{
-			headers: {
-				Authorization: "",
-				"Content-Type": "application/json",
-			},
-			method: "POST",
-			body: JSON.stringify(data),
-		}
-	);
-	const result = await response.json();
-	return result;
-}
 
