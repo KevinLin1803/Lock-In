@@ -1,17 +1,23 @@
-<<<<<<< HEAD
-# Lock_In
-Anti Rot Buddy
-=======
-# React + Vite
+# Lock_In_FrontEnd
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project was bootstrapped using [vite-plugin-react-pages](https://github.com/vitejs/vite-plugin-react-pages).
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 📘 vite-plugin-react-pages (NPM Package)
 
-## Expanding the ESLint configuration
+`vite-plugin-react-pages` (vite-pages) is a React app framework powered by Vite. It is particularly suited for:
 
-If you are developing a production application, we recommend using TypeScript and enable type-aware lint rules. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
->>>>>>> 5733ce9 (Vite chrome extension set-up)
+- Blog sites  
+- Documentation sites for libraries or products  
+- Story/demo/playground environments for React components or libraries (similar to Storybook.js)  
+
+
+## 🚀 Getting Started
+
+### 🏗 Running A Local Demo  
+```
+npm install  # Install dependencies
+npm run build  # Build the project
+```
+Then navigate to "manage extensions" on google chrome. Load the dist folder from the npm build into "Load Unpacked"
