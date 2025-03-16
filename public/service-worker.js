@@ -279,22 +279,29 @@ function sendFocusSessionData(task) {
 }
 
 // Function to send end session data
+
 function sendEndSessionData() {
     const endSessionData = {
         email: userEmail,
-        // endTime: new Date().toISOString()
+        endTime: new Date().toISOString()
     };
 
     console.log("Focus session ended:", endSessionData);
 
-    // Sending data to backend for session end
     fetch("https://jth0cy1p67.execute-api.ap-southeast-2.amazonaws.com/endSession", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(endSessionData)
     })
     .then((response) => response.json())
-    .then((data) => console.log("End session sent successfully:", data))
+    .then((data) => {
+        console.log("End session sent successfully:", data);
+        
+        // Store the response in a JSON file
+        fs.writeFileSync("analytics.json", JSON.stringify(data, null, 2), "utf8");
+
+        console.log("Response saved to endSessionResponse.json");
+    })
     .catch((error) => console.error("Error sending end session:", error));
 }
 
