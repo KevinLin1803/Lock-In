@@ -21,3 +21,8 @@ npm install  # Install dependencies
 npm run build  # Build the project
 ```
 Then navigate to "manage extensions" on google chrome. Load the dist folder from the npm build into "Load Unpacked"
+
+## Note:
+Please Ensure Chrome web browser has notification permissions
+
+Backend: https://github.com/east0109/lock-in
