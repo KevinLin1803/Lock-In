@@ -1,5 +1,5 @@
 // Replace with actual user email (should ideally be set dynamically)
-let userEmail = "example@gmail.com";
+let userEmail = "test@gmail.com";
 
 // Track whether focus mode is active
 let isFocusModeOn = false;
@@ -153,14 +153,14 @@ function scrapeYouTubeResults() {
 
 
 
-chrome.identity.getProfileUserInfo({ accountStatus: 'ANY' }, (userInfo) => {
-    if (chrome.runtime.lastError) {
-        console.error("Error:", chrome.runtime.lastError);
-    } else {
-        console.log("User email:", userInfo.email);
-        userEmail = userInfo.email
-    }
-});
+// chrome.identity.getProfileUserInfo({ accountStatus: 'ANY' }, (userInfo) => {
+//     if (chrome.runtime.lastError) {
+//         console.error("Error:", chrome.runtime.lastError);
+//     } else {
+//         console.log("User email:", userInfo.email);
+//         userEmail = userInfo.email
+//     }
+// });
 // Listen for new tabs being created
 chrome.tabs.onCreated.addListener((tab) => {
     if (isFocusModeOn) {
@@ -193,30 +193,43 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
 
 // Function to send data to the backend
 function sendTabData(tab, eventType) {
-    // if (!tab || !tab.id || !tab.url) 
-    //     return;
+    if (!tab || !tab.id || !tab.url) return;
      // Ignore invalid tabs
 
     const tabData = {
-        // id: tab.id,
         url: tab.url,
-        // title: tab.title || "Unknown",
-        // timeStamp: new Date().toISOString(),
-        // eventType: eventType,
         email: userEmail,
-        // focusTask: currentTask, // Attach current focus task
     };
 
-    console.log(eventType, tabData);
+    const url = new URL(tab.url);
 
-    // Gets the data from here and if it works we happy
+    // Exclude Google searches and Google.com pages
+    if (
+        url.hostname.endsWith("google.com") &&
+        (url.pathname === "/search" || url.hostname === "www.google.com") ||
+        tab.url === "chrome://newtab/" || 
+        tab.url === "about:newtab"
+    ) {
+        console.log("Ignoring Google search, Google homepage, or new tab:", url.href);
+        return;
+    }
+
+    // console.log(eventType, tabData);
     fetch("https://jth0cy1p67.execute-api.ap-southeast-2.amazonaws.com/checkUrl", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(tabData)
     })
     .then((response) => response.json())
-    .then((data) => console.log("Tab event sent successfully:", data))
+    .then((data) => {
+        if (data.isRelated == false) {
+            self.registration.showNotification("Lock-In Check", {
+                body: "Are you actually locked in bro?",
+                icon: "experiment (1).jpeg"
+            })
+        }
+        console.log("tab sent succesfully", data);
+    })
     .catch((error) => console.error("Error sending tab data:", error));
 }
 
@@ -231,7 +244,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         isFocusModeOn = true;
         currentTask = request.task; // Store the task
         sendFocusSessionData(currentTask);
-        sendTabData(tab, "Tab Created")
+        getActiveTab((tab) => {
+            sendFocusSessionData(currentTask);  // Assuming this is defined elsewhere
+            sendTabData(tab, "Tab Created");
+        });
     } else if (request.type === "END_SESSION") {
         isFocusModeOn = false;
         currentTask = null; // Reset task
@@ -265,7 +281,7 @@ function sendFocusSessionData(task) {
         body: JSON.stringify(focusData)
     })
     .then((response) => response.json())
-    .then((data) => console.log("Focus session sent successfully:", data))
+    .then((data) =>  {localStorage.setItem("data", data)})
     .catch((error) => console.error("Error sending focus session:", error));
 }
 
@@ -286,13 +302,7 @@ function sendEndSessionData() {
     })
     .then((response) => response.json())
     .then((data) => {
-        console.log("End session sent successfully:", data);
-        
-        // Store the response in a JSON file
-        fs.writeFileSync("analytics.json", JSON.stringify(data, null, 2), "utf8");
-
-        console.log("Response saved to endSessionResponse.json");
-    })
+        console.log("End session sent successfully:", data);})
     .catch((error) => console.error("Error sending end session:", error));
 }
 

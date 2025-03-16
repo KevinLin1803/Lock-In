@@ -10,8 +10,10 @@
         "tabs",
         "scripting",
         "activeTab",
-        "identity", 
-        "identity.email"
+        "identity",
+        "storage", 
+        "identity.email",
+        "notifications"
     ],
     "background": {
         "service_worker": "service-worker.js",

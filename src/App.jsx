@@ -123,7 +123,6 @@ function App() {
             <div className="task-display">
               <h2>Currently Focusing On:</h2>
               <p className="task-text">{task}</p>
-              <div className="stopwatch">Elapsed Time: {formatTime(elapsedTime)}</div>
             </div>
             <button onClick={handleEndSession} className="btn btn-danger">
               End Session
@@ -134,7 +133,6 @@ function App() {
         {step === "postSession" && (
           <div className="step-container post-session-step">
             <h2>Good Job!</h2>
-            <p>You focused for {formatTime(elapsedTime)}</p>
             <button onClick={handleClosePostSession} className="btn btn-primary">
               Close
             </button>
