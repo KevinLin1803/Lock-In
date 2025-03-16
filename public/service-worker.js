@@ -41,6 +41,19 @@ function sendTabData(tab, eventType) {
         email: userEmail,
     };
 
+    const url = new URL(tab.url);
+
+    // Exclude Google searches and Google.com pages
+    if (
+        url.hostname.endsWith("google.com") &&
+        (url.pathname === "/search" || url.hostname === "www.google.com") ||
+        tab.url === "chrome://newtab/" || 
+        tab.url === "about:newtab"
+    ) {
+        console.log("Ignoring Google search, Google homepage, or new tab:", url.href);
+        return;
+    }
+
     // console.log(eventType, tabData);
     fetch("https://jth0cy1p67.execute-api.ap-southeast-2.amazonaws.com/checkUrl", {
         method: "POST",
