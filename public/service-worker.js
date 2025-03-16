@@ -238,17 +238,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         sendEndSessionData();
     } else if (request.type === "YOUTUBE_RECOMMENDATIONS") {
         console.log("Received YouTube recommendations:", request.recommendations);
-        console.log(typeof request.recommendations);
-        content = request.recommendations
-        uniqueElements = request.uniqueElements
-        query({"inputs": {
-            "source_sentence": currentTask,
-            "sentences": request.recommendations
-        }}).then((response) => {
-            console.log(JSON.stringify(response));
-            contentSimilarityScore = JSON.parse(JSON.stringify(response));
-            hideYouTubeRecommendations();
-        });
+        console.log(typeof request.recommendations)
+    
     } else if (request.type === "YOUTUBE_WATCH_RECOMMENDATIONS") {
         console.log("Received YouTube recommendations:", request.recommendations);
     } else if (request.type === "YOUTUBE_SEARCH_RESULTS") {
@@ -341,7 +332,7 @@ async function query(data) {
 		"https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2",
 		{
 			headers: {
-				Authorization: "Bearer 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",
+				Authorization: "",
 				"Content-Type": "application/json",
 			},
 			method: "POST",
