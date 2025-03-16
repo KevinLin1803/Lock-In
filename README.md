@@ -19,4 +19,5 @@ This project was bootstrapped using [vite-plugin-react-pages](https://github.com
 ```
 npm install  # Install dependencies
 npm run build  # Build the project
-``
+```
+Then navigate to "manage extensions" on google chrome. Load the dist folder from the npm build into "Load Unpacked"
