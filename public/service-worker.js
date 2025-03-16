@@ -1,10 +1,166 @@
 // Replace with actual user email (should ideally be set dynamically)
-const userEmail = "user@example.com";
+let userEmail = "example@gmail.com";
 
 // Track whether focus mode is active
 let isFocusModeOn = false;
 let currentTask = null; // Store the task associated with the focus session
 
+// Website identification and scraping
+
+function checkAndScrapeYouTube(tabId, url) {
+    console.log("checkAndScrapeYouTube is being called with URL:", url);
+    
+    if (url && url.includes("youtube.com/watch")) {
+        console.log("User is watching a video.");
+
+        chrome.scripting.executeScript({
+            target: { tabId: tabId },
+            function: scrapeYoutubeWatch
+        }).then(() => console.log("executeScript was successfully triggered"))
+          .catch(error => console.error("Error executing script:", error));
+
+    } else if (url && url.includes("youtube.com/results")) {
+        console.log("User is on YouTube search results.");
+
+        chrome.scripting.executeScript({
+            target: { tabId: tabId },
+            function: scrapeYouTubeResults
+        }).then(() => console.log("executeScript was successfully triggered"))
+          .catch(error => console.error("Error executing script:", error));
+
+    } else if (url && url.includes("youtube.com")) {
+        console.log("User is on YouTube home, attempting to scrape recommendations...");
+        
+        chrome.scripting.executeScript({
+            target: { tabId: tabId },
+            function: scrapeYouTubeHome
+        }).then(() => console.log("executeScript was successfully triggered"))
+          .catch(error => console.error("Error executing script:", error));
+    }
+}
+
+let uniqueElements = {}; // Global dictionary to store video elements
+let contentSimilarityScore = []
+let content = []
+
+function scrapeYouTubeHome() {
+    console.log("scrapeYoutubeHome is being called");
+    try {
+        uniqueElements = {}; // Reset dictionary before scraping
+
+        const elements = document.querySelectorAll(`ytd-rich-grid-media ytd-thumbnail a#thumbnail, ytd-rich-grid-media ytd-thumbnail, ytd-rich-grid-media ytd-thumbnail a#thumbnail > *`);
+
+        elements.forEach((video) => {
+            const videoTile = video.closest("ytd-rich-grid-media");
+            const title = videoTile?.querySelector("#video-title")?.innerText.trim();
+            const url = video.href;
+
+            if (title && url) {
+                uniqueElements[title] = { url, video: video }; // Store the video tile element
+            }
+
+            video.style.opacity = 0
+            
+            console.log(title)
+
+        });
+
+        chrome.runtime.sendMessage({ type: "YOUTUBE_RECOMMENDATIONS", recommendations: Object.keys(uniqueElements), uniqueElements: uniqueElements });
+        console.log("YouTube Recommendations:", uniqueElements);
+
+
+
+        // Call function to hide elements
+        // hideYouTubeRecommendations();
+
+    } catch (error) {
+        console.error("Error scraping YouTube recommendations:", error);
+    }
+}
+
+function hideYouTubeRecommendations() {
+    console.log("HEREHERE");
+    console.log("Content Similarity Scores:", contentSimilarityScore);
+    console.log("Content:", content);
+    console.log("uniqueElements", uniqueElements)
+
+    if (!Array.isArray(contentSimilarityScore) || !Array.isArray(content)) {
+        console.error("Error: contentSimilarityScore or content is not an array.");
+        return;
+    }
+
+    for (let i = 0; i < content.length; i++) {
+        console.log(`Score for index ${i}: ${contentSimilarityScore[i]}`);
+
+        if (contentSimilarityScore[i] < 0.1) {
+            console.log(`Hiding recommendation: ${content[i]}`);
+            // You need to target the actual DOM element and hide it
+            console.log(uniqueElements[content[i]])
+            console.log(typeof(uniqueElements[content[i]]))
+            if (uniqueElements[content[i]].video) {
+                uniqueElements[content[i]].video.style.opacity = 0; // Hide video
+            }
+        }
+    }
+}
+
+
+
+function scrapeYoutubeWatch() {
+    console.log("scrapeYoutubeWatch is being called");
+    try {
+        const elements = document.querySelectorAll("a#thumbnail.yt-simple-endpoint.inline-block.style-scope.ytd-thumbnail");
+
+        let recommendations = [];
+        elements.forEach((video) => {
+            const titleElement = video.closest("ytd-compact-video-renderer, ytd-video-renderer")?.querySelector("#video-title");
+            const title = titleElement?.innerText.trim();
+            const url = video.href.startsWith("/") ? `https://www.youtube.com${video.href}` : video.href;
+            if (title && url) {
+                recommendations.push({ title, url });
+            }
+        });
+
+        chrome.runtime.sendMessage({ type: "YOUTUBE_WATCH_RECOMMENDATIONS", recommendations });
+        console.log("YouTube Watch Recommendations:", recommendations);
+    } catch (error) {
+        console.error("Error scraping YouTube watch recommendations:", error);
+    }
+}
+
+function scrapeYouTubeResults() {
+    console.log("scrapeYouTubeResults is being called");
+    try {
+        const elements = document.querySelectorAll('a#thumbnail.yt-simple-endpoint.inline-block.style-scope.ytd-thumbnail');
+        let recommendations = [];
+
+        elements.forEach((video) => {
+            const videoContainer = video.closest("ytd-video-renderer");
+            const title = videoContainer?.querySelector("#video-title")?.innerText.trim();
+            const url = video.href.startsWith("/") ? "https://www.youtube.com" + video.href : video.href;
+
+            if (title && url) {
+                recommendations.push({ title, url });
+            }
+        });
+
+        chrome.runtime.sendMessage({ type: "YOUTUBE_SEARCH_RESULTS", recommendations });
+        console.log("YouTube Search Results:", recommendations);
+    } catch (error) {
+        console.error("Error scraping YouTube search results:", error);
+    }
+}
+
+
+
+chrome.identity.getProfileUserInfo({ accountStatus: 'ANY' }, (userInfo) => {
+    if (chrome.runtime.lastError) {
+        console.error("Error:", chrome.runtime.lastError);
+    } else {
+        console.log("User email:", userInfo.email);
+        userEmail = userInfo.email
+    }
+});
 // Listen for new tabs being created
 chrome.tabs.onCreated.addListener((tab) => {
     if (isFocusModeOn) {
@@ -18,6 +174,8 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (isFocusModeOn && changeInfo.url) { // Ensures we're capturing only URL changes
         console.log("URL changed:", changeInfo.url);
         sendTabData(tab, "URL Changed");
+        
+        checkAndScrapeYouTube(tabId, changeInfo.url);
     }
 });
 
@@ -27,6 +185,8 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
         chrome.tabs.get(activeInfo.tabId, (tab) => {
             console.log("Tab switched:", tab);
             sendTabData(tab, "Tab Switched");
+            
+            checkAndScrapeYouTube(tab.id, tab.url);
         });
     }
 });
@@ -76,6 +236,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         isFocusModeOn = false;
         currentTask = null; // Reset task
         sendEndSessionData();
+    } else if (request.type === "YOUTUBE_RECOMMENDATIONS") {
+        console.log("Received YouTube recommendations:", request.recommendations);
+        console.log(typeof request.recommendations);
+        content = request.recommendations
+        uniqueElements = request.uniqueElements
+        query({"inputs": {
+            "source_sentence": currentTask,
+            "sentences": request.recommendations
+        }}).then((response) => {
+            console.log(JSON.stringify(response));
+            contentSimilarityScore = JSON.parse(JSON.stringify(response));
+            hideYouTubeRecommendations();
+        });
+    } else if (request.type === "YOUTUBE_WATCH_RECOMMENDATIONS") {
+        console.log("Received YouTube recommendations:", request.recommendations);
+    } else if (request.type === "YOUTUBE_SEARCH_RESULTS") {
+        console.log("Received YouTube recommendations:", request.recommendations);
     }
     sendResponse({ status: "Received" });
 });
@@ -120,3 +297,51 @@ function sendEndSessionData() {
     .then((data) => console.log("End session sent successfully:", data))
     .catch((error) => console.error("Error sending end session:", error));
 }
+
+// async function sendCategorisationData(recommendations) {
+//     for (const recommendation of recommendations) {
+//         const categorisationData = {
+//             category: currentTask,
+//             sentence: recommendation // Ensure this field exists
+//         };
+
+//         console.log("Sending categorisation data:", categorisationData);
+
+//         try {
+//             // Delay before sending the request
+//             await new Promise(resolve => setTimeout(resolve, 2000));
+
+//             const response = await fetch("http://localhost:3000/api/categorise", {
+//                 method: "POST",
+//                 headers: { "Content-Type": "application/json" },
+//                 body: JSON.stringify(categorisationData)
+//             });
+
+//             if (!response.ok) {
+//                 throw new Error(`HTTP error! Status: ${response.status}`);
+//             }
+
+//             const data = await response.json();
+//             console.log("Categorisation response:", data);
+//         } catch (error) {
+//             console.error("Error sending categorisation data:", error.message);
+//         }
+//     }
+// }
+
+async function query(data) {
+	const response = await fetch(
+		"https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2",
+		{
+			headers: {
+				Authorization: "Bearer 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",
+				"Content-Type": "application/json",
+			},
+			method: "POST",
+			body: JSON.stringify(data),
+		}
+	);
+	const result = await response.json();
+	return result;
+}
+

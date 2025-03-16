@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "version": "1.0.0",
-    "name": "My Vite Extension",
+    "name": "Lock In!",
 
     "action": {
         "default_popup": "index.html"
@@ -9,7 +9,9 @@
     "permissions": [
         "tabs",
         "scripting",
-        "activeTab"
+        "activeTab",
+        "identity", 
+        "identity.email"
     ],
     "background": {
         "service_worker": "service-worker.js",
